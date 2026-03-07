@@ -45,4 +45,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Relasi: User hasMany Product
+     */
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
 }

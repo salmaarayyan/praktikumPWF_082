@@ -17,12 +17,18 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        $user = $request->user();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'quantity' => 'required|integer',
+            'qty' => 'required|integer',
             'price' => 'required|numeric',
-            'user_id' => 'required|exists:users,id',
+            'user_id' => $user->isAdmin() ? 'required|exists:users,id' : 'nullable',
         ]);
+
+        if (! $user->isAdmin()) {
+            $validated['user_id'] = $user->id;
+        }
 
         $product = Product::create($validated);
 
@@ -31,7 +37,9 @@ class ProductController extends Controller
 
     public function create()
     {
-        $users = User::orderBy('name')->get();
+        $users = auth()->user()->isAdmin()
+            ? User::orderBy('name')->get()
+            : collect();
 
         return view('product.create', compact('users'));
     }
@@ -46,13 +54,21 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         $product = Product::findOrFail($id);
+        $user = $request->user();
 
-        $validated = $request->validate([
+        $this->authorize('update', $product);
+
+        $rules = [
             'name' => 'sometimes|string|max:255',
-            'quantity' => 'sometimes|integer',
+            'qty' => 'sometimes|integer',
             'price' => 'sometimes|numeric',
-            'user_id' => 'sometimes|exists:users,id',
-        ]);
+        ];
+
+        if ($user->isAdmin()) {
+            $rules['user_id'] = 'sometimes|exists:users,id';
+        }
+
+        $validated = $request->validate($rules);
 
         $product->update($validated);
 
@@ -61,14 +77,45 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
+        $this->authorize('update', $product);
+
         $users = User::orderBy('name')->get();
 
-        return view('product.create', compact('product', 'users'));
+        return view('product.edit', compact('product', 'users'));
+    }
+
+    public function export()
+    {
+        $products = Product::with('user')->get();
+
+        $csvContent = "id,name,qty,price,owner\n";
+        foreach ($products as $product) {
+            $row = [
+                $product->id,
+                $product->name,
+                $product->qty,
+                $product->price,
+                $product->user->name ?? '-',
+            ];
+
+            $csvContent .= sprintf("%s,%s,%s,%s,%s\n", ...array_map(function ($value) {
+                $escaped = str_replace('"', '""', (string) $value);
+
+                return '"'.$escaped.'"';
+            }, $row));
+        }
+
+        return response($csvContent, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="products-export.csv"',
+        ]);
     }
 
     public function delete($id)
     {
         $product = Product::findOrFail($id);
+
+        $this->authorize('delete', $product);
 
         $product->delete();
 

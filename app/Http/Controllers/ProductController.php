@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 use App\Models\Product;
 use App\Models\User;
-use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
@@ -15,16 +16,11 @@ class ProductController extends Controller
         return view('product.index', compact('products'));
     }
 
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
         $user = $request->user();
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'qty' => 'required|integer',
-            'price' => 'required|numeric',
-            'user_id' => $user->isAdmin() ? 'required|exists:users,id' : 'nullable',
-        ]);
+        $validated = $request->validated();
 
         if (! $user->isAdmin()) {
             $validated['user_id'] = $user->id;
@@ -51,24 +47,18 @@ class ProductController extends Controller
         return view('product.view', compact('product'));
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateProductRequest $request, $id)
     {
         $product = Product::findOrFail($id);
         $user = $request->user();
 
         $this->authorize('update', $product);
 
-        $rules = [
-            'name' => 'sometimes|string|max:255',
-            'qty' => 'sometimes|integer',
-            'price' => 'sometimes|numeric',
-        ];
+        $validated = $request->validated();
 
-        if ($user->isAdmin()) {
-            $rules['user_id'] = 'sometimes|exists:users,id';
+        if (! $user->isAdmin()) {
+            unset($validated['user_id']);
         }
-
-        $validated = $request->validate($rules);
 
         $product->update($validated);
 

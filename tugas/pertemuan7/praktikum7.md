@@ -7,7 +7,7 @@ Tambahkan screenshot hasil pengujian berikut pada folder pertemuan7:
 ![alt text](detailadmin.png)
 
 2. Screenshot halaman Product List saat login user.
-![alt text](product-user.png)
+![alt text](detailuser.png)
 
 3. Screenshot tombol Delete dengan dialog konfirmasi.
 ![alt text](hapus.png)

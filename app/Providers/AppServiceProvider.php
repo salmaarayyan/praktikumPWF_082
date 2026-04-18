@@ -24,6 +24,10 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Product::class, ProductPolicy::class);
 
+        Gate::define('manage-products', function ($user) {
+            return in_array($user->role, ['admin', 'user'], true);
+        });
+
         Gate::define('export-product', function ($user) {
             return $user->role === 'admin';
         });

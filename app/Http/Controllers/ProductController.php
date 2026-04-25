@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 
@@ -37,7 +38,9 @@ class ProductController extends Controller
             ? User::orderBy('name')->get()
             : collect();
 
-        return view('product.create', compact('users'));
+        $categories = Category::orderBy('name')->get();
+
+        return view('product.create', compact('users', 'categories'));
     }
 
     public function show($id)
@@ -70,8 +73,9 @@ class ProductController extends Controller
         $this->authorize('update', $product);
 
         $users = User::orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
 
-        return view('product.edit', compact('product', 'users'));
+        return view('product.edit', compact('product', 'users', 'categories'));
     }
 
     public function export()

@@ -11,14 +11,13 @@ class Category extends Model
 
     protected $fillable = [
         'name',
-        'product_id',
     ];
 
     /**
-     * Relasi: Category belongsTo Product
+     * Relasi: Category hasMany Product
      */
-    public function product()
+    public function products()
     {
-        return $this->belongsTo(Product::class);
+        return $this->hasMany(Product::class);
     }
 }

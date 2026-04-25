@@ -14,6 +14,7 @@ class Product extends Model
         'qty',
         'price',
         'user_id',
+        'category_id',
     ];
 
     /**
@@ -25,10 +26,10 @@ class Product extends Model
     }
 
     /**
-     * Relasi: Product hasMany Category
+     * Relasi: Product belongsTo Category
      */
-    public function categories()
+    public function category()
     {
-        return $this->hasMany(Category::class);
+        return $this->belongsTo(Category::class);
     }
 }
